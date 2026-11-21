@@ -1,0 +1,44 @@
+# Encodes docs/specs/0002-first-skills.md shared acceptance #2: CI fails if any
+# file under skills/ names a model or model vendor. The pattern list lives in
+# this check only. Case-insensitive with boundaries: the required .claude
+# symlink folder and ordinary words (architecture, doctor, ...) do not match, and
+# a grep error (exit 2) fails the job instead of passing.
+
+name: Skills model neutrality
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  model-neutrality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject model names and vendors under skills/
+        run: |
+          patterns='(^|[^a-zA-Z0-9.])(anthropic|xai|x\.ai|zhipu|deepmind|midjourney|mistral|'
+          patterns+='openai|openrouter|nvidia|cohere|moonshot|minimax|google|meta|microsoft|'
+          patterns+='perplexity|4o|chatgpt|gpt|claude|codex|dall[- ]?e|deepseek|ernie|'
+          patterns+='gemini|glm|grok|haiku|kimi|llama|mixtral|o1|o3|o4|opus|phi|qwen|sonnet|'
+          patterns+='stable[- ]?diffusion)([^a-zA-Z]|$)'
+          if [ ! -d skills ]; then
+            echo "skills/ is absent; nothing to check."
+            exit 0
+          fi
+          export LC_ALL=C
+          status=0
+          grep -rniE "$patterns" skills/ || status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "::error::skills/ names a model or model vendor; see the matched lines above. Model choice belongs to the user's harness config, not to a skill."
+            exit 1
+          elif [ "$status" -eq 1 ]; then
+            echo "OK: no model names or model vendors under skills/."
+            exit 0
+          else
+            echo "::error::grep exited $status (expected 0 or 1); failing closed."
+            exit 1
+          fi
