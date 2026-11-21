@@ -1,0 +1,11 @@
+// Test allowlist for fixtures only: the entry carries no evidence, so it
+// must be rejected at load (fail closed) and the whole run aborted with
+// ALLOWLIST_INVALID. Evidence is not optional (rule 2).
+{
+  "routes": [
+    {
+      "id": "openrouter/fixture-verified-free",
+      "evidence": { "checked": "2026-11-21" }
+    }
+  ]
+}

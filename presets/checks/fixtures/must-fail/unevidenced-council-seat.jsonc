@@ -1,0 +1,20 @@
+// Negative fixture (rule 1): a council seat route without evidence must
+// fail with UNEVIDENCED_MODEL. The id is fixture data.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["observer", "council", "councillor"],
+  "council": {
+    "presets": {
+      "default": {
+        "alpha": { "model": "nvidia/fixture-paid-seat" }
+      }
+    }
+  },
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "oracle": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "designer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "fixer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

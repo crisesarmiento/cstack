@@ -1,0 +1,14 @@
+// Negative fixture (skills policy): defining "skills" replaces the
+// inherited grant list upstream; the template shape requires additive
+// directives only. Must fail with SKILLS_REPLACEMENT_FORBIDDEN.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": {
+      "model": "FILL_IN_VERIFIED_FREE_MODEL_ID",
+      "skills": ["correct", "sharpen"]
+    },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

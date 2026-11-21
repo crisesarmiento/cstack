@@ -1,0 +1,145 @@
+// cstack preset template for oh-my-opencode-slim 3.0.7 (OpenCode 2.3).
+//
+// Schema verified against the upstream v3.0.7 tag:
+// https://github.com/alvinunreal/oh-my-opencode-slim/tree/v3.0.7
+// (docs/configuration.md, docs/project-local-customization.md,
+// docs/council.md, and src/agents/council-agents.ts at that tag).
+// Nothing here is a live route: every model value is a
+// FILL_IN_VERIFIED_FREE_MODEL_ID placeholder the adopting project fills.
+//
+// ADOPTION (full steps in presets/README.md):
+// 1. An approved Decision in the adopting project comes first
+//    (rules/cost-and-models.md, rule 4).
+// 2. Copy this file to <project>/.opencode/oh-my-opencode-slim.jsonc.
+//    If both .json and .jsonc exist, .jsonc wins. A project layer overrides
+//    the user's global config for matching keys.
+// 3. Replace every placeholder with a route you verified is free TODAY
+//    (an OpenRouter free-tier route or an NVIDIA free endpoint), or keep the
+//    role disabled as shipped. A placeholder is not a usable model ID and no
+//    runnable paid default ships in this template; it is a tripwire against
+//    accidental defaults, not a spend guarantee - the host or a higher
+//    layer can still override models at runtime.
+// 4. Never fill a paid route, never turn fallback back on, and never
+//    re-enable council, councillor, or observer without reading their
+//    entries below. Enforce all of this in your CI:
+//    presets/checks/check_presets.py --file
+//    .opencode/oh-my-opencode-slim.jsonc --allowlist <your allowlist>.
+//
+// WHY THE ROOT "agents" LEVEL: upstream precedence is ancestor layer < child
+// layer < root agents entries < host opencode.json. A root agents.<role>
+// entry beats every preset entry for that role, including paid models
+// inherited from a user-level preset. The host's own opencode.json agent
+// entries can still override this file; review that file when adopting.
+
+{
+  // Slim's foreground model-chain failover is ON by default upstream
+  // (fallback.enabled defaults to true). It walks a configured model chain
+  // when the current model fails, and a chain entry inherited from another
+  // layer can be a paid route. Keep it off: every role below is pinned to a
+  // single route, so failure surfaces as a provider error instead of silent
+  // spending on whatever comes next in a chain.
+  "fallback": { "enabled": false },
+
+  // Belt and suspenders, both fail-closed:
+  // - foreground-fallback: upstream keeps the failover hook off via
+  //   disabled_hooks even if the switch above is re-enabled later.
+  // - council-inject: the automatic, keyword-triggered council procedure
+  //   stays off even after someone re-enables council, so a re-enable can
+  //   only dispatch seats deliberately, by name. Drop this entry only
+  //   together with a reviewed council re-enable.
+  // NOTE: this top-level array REPLACES the user-level disabled_hooks list
+  // (upstream: top-level arrays keep replacement behavior), so re-add any
+  // hooks you had disabled globally.
+  "disabled_hooks": ["foreground-fallback", "council-inject"],
+
+  // This top-level array REPLACES the user-level disabled_agents list
+  // (upstream: top-level arrays keep replacement behavior), so it must name
+  // everything this project keeps off, including observer (upstream's own
+  // default disables observer - an omitted name here would re-enable it).
+  //
+  // council: the whole-chain switch. Upstream source at v3.0.7
+  // (src/agents/council-agents.ts) builds each seat as a dynamic
+  // councillor-<name> agent whose model comes from the ACTIVE council
+  // preset (council.default_preset, else "default") - user-level config
+  // this file cannot verify - and returns an empty seat list as soon as
+  // "council" is disabled. Council seats also accept model arrays
+  // (fallback chains) upstream. Disabling council here is the only way to
+  // guarantee no inherited paid seat can be dispatched.
+  // RE-ENABLING council requires: remove "council" from this list AND
+  // define the active council preset in THIS file with every seat pinned
+  // to a route you verified free (evidenced in your allowlist) AND a
+  // reviewed policy change (rules/cost-and-models.md rules 1-3). The
+  // checker fails any file that enables council without this list entry.
+  //
+  // councillor: listed defensively for the agent-space key below; upstream
+  // strips unknown disabled_agents names with a warning, so it is harmless.
+  "disabled_agents": ["observer", "council", "councillor"],
+
+  // Do not select a preset here. A user-level preset can carry paid models;
+  // the root agents entries below win for these roles regardless of which
+  // preset is active.
+
+  "agents": {
+    // Orchestrator: primary planner; reads the session and delegates to the
+    // specialists below. The session's front door.
+    "orchestrator": {
+      "model": "FILL_IN_VERIFIED_FREE_MODEL_ID",
+      // Keeps slim's default skill grants and appends cstack's (upstream:
+      // skills_add on an agent without a skills list keeps the defaults and
+      // appends). When your generated verify-<app> skill exists, add its id
+      // to this list. Broad alternative: "skills_include_local": true picks
+      // up .agents/skills/** and .opencode/skills/** automatically.
+      "skills_add": ["correct", "sharpen"]
+    },
+
+    // Explorer: fast codebase search and external docs/web research.
+    // Route intent: cheap and fast; depth is not the point here.
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+
+    // Oracle: strategic technical advisor.
+    // Route intent: the strongest free route you have verified.
+    "oracle": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+
+    // Designer: UI/UX design, review, and implementation.
+    "designer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+
+    // Fixer: fast implementation specialist; runs delegated code changes.
+    "fixer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+
+    // Observer: visual analysis; requires a vision-capable model. Inert
+    // while it stays in disabled_agents above (upstream default also
+    // disables it). To enable it: remove it from that list and fill this
+    // placeholder with a route you verified free AND vision-capable - the
+    // checker requires observer to be either disabled or pinned with an
+    // evidenced (non-placeholder) route.
+    "observer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+
+    // Council: dispatches several councillors in parallel and merges their
+    // answers into a structured report. Inert while it stays in
+    // disabled_agents above: the seat chain is not built at all. The model
+    // below does NOT pin the seats - seat models come from the active
+    // council preset (council.presets.<name>.<councillor>), so re-enabling
+    // council without pinning every seat in THIS file would let inherited
+    // (possibly paid) seat routes run. See the disabled_agents comment for
+    // the full re-enable checklist.
+    "council": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+
+    // Councillor: one council seat. Seat subagents are dynamic
+    // councillor-<name> agents built from the active council preset, not
+    // from this key; this entry covers the agent-space default and stays
+    // inert while council is disabled above.
+    "councillor": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+
+    // ROSTER POLICY (enforced by presets/checks/check_presets.py): every
+    // built-in role above must either carry an explicit route in root
+    // agents or be listed in disabled_agents - deleting an entry instead
+    // of disabling the role would let it inherit the active preset's
+    // primary model, which this file cannot verify. Custom agents added
+    // under "agents" must carry explicit models for the same reason.
+    // Council must stay in disabled_agents. Model arrays (ordered fallback
+    // chains upstream, also on council seats) and "inheritModelFrom" are
+    // rejected outright by the checker (MODEL_CHAIN_FORBIDDEN,
+    // INHERIT_MODEL_FORBIDDEN): with fallback disabled a scalar is all you
+    // need, and a chain is exactly where an unevidenced route hides.
+  }
+}

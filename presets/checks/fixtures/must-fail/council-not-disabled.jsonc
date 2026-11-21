@@ -1,0 +1,13 @@
+// Negative fixture (council policy): council is pinned but NOT disabled.
+// Pinning the council agent does not pin the seats - their models come from
+// the active council preset, which this file cannot verify. Must fail with
+// COUNCIL_NOT_DISABLED and nothing else.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "council": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

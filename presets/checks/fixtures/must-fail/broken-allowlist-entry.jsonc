@@ -1,0 +1,13 @@
+// Negative fixture (rule 2): a route whose allowlist entry lacks evidence
+// is not admitted. Runs with allowlist-incomplete.json via manifest.json;
+// the broken evidence record must abort the whole run with ALLOWLIST_INVALID
+// (operational, exit 2) - the checker does not continue on an allowlist it
+// cannot trust. The route id is fixture data.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "openrouter/fixture-verified-free" }
+  }
+}

@@ -1,0 +1,11 @@
+// Fixture: a route listed in the allowlist WITH complete evidence is
+// admitted. Runs with allowlist-complete.json via manifest.json. The id is
+// fixture data with an in-scope provider prefix (openrouter/).
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "openrouter/fixture-verified-free" }
+  }
+}

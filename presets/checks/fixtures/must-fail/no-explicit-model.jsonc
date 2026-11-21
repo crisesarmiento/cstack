@@ -1,0 +1,11 @@
+// Negative fixture (roster policy): an agent entry present without a
+// "model" key inherits the active preset's primary model, which this file
+// cannot verify. Must fail with ROLE_INHERITS_UNEVIDENCED_MODEL.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "skills_add": ["sharpen"] }
+  }
+}

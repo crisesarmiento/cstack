@@ -1,0 +1,14 @@
+// Test allowlist for fixtures only. "example.invalid" is a reserved TLD:
+// this entry is fixture data, not a real verification of any route.
+{
+  "routes": [
+    {
+      "id": "openrouter/fixture-verified-free",
+      "evidence": {
+        "source": "https://example.invalid/pricing",
+        "checked": "2026-11-21",
+        "quote": "Fixture-only evidence record: $0.00 per token."
+      }
+    }
+  ]
+}

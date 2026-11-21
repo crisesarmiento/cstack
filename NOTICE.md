@@ -7,6 +7,9 @@ pstack is distributed under the MIT License, reproduced below.
 Adapted skills: `correct`, `verify-template` (from `create-verification-skill`), `sharpen`.
 See `docs/specs/0002-first-skills.md` for what was kept and what was changed.
 
+The eight principles in `principles/PRINCIPLES.md` are also adapted from
+pstack 0.15.46 by Lauren Tan, under the same MIT License reproduced below.
+
 ---
 
 MIT License

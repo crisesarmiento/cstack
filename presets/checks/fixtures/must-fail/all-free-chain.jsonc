@@ -1,0 +1,13 @@
+// Negative fixture (rule 1): an array "model" is forbidden even when every
+// entry is a placeholder or verified route - no all-free chain either. Must
+// fail with MODEL_CHAIN_FORBIDDEN and nothing else.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": {
+      "model": ["FILL_IN_VERIFIED_FREE_MODEL_ID", "FILL_IN_VERIFIED_FREE_MODEL_ID"]
+    }
+  }
+}

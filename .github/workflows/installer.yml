@@ -1,0 +1,25 @@
+# Verifies install/cstack-install (option A of docs/specs/0001 §6): the same
+# dependency-free suite a developer runs locally via
+# `sh install/test-cstack-install.sh`. The suite builds its own fixture git
+# repos (source with tags, bare origin, consumer) in a temp directory, so it
+# needs no network access and never tags this repository. On ubuntu-latest
+# /bin/sh is dash, which also acts as the strict POSIX-sh conformance gate
+# for the installer and the suite.
+
+name: Installer
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  installer-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the cstack-install test suite
+        run: sh install/test-cstack-install.sh

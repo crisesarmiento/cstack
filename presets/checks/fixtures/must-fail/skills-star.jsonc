@@ -1,0 +1,13 @@
+// Negative fixture (skills policy): a "*" grant hands the agent every
+// present and future skill. Must fail with SKILLS_STAR_FORBIDDEN.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": {
+      "model": "FILL_IN_VERIFIED_FREE_MODEL_ID",
+      "skills_add": ["*"]
+    },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

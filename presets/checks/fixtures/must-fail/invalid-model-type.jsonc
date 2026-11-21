@@ -1,0 +1,13 @@
+// Negative fixture (fail-closed shapes): a model of an invalid type is an
+// operational error, never a silently-pinned route. explorer carries null
+// and designer an empty chain; the checker also rejects numbers and objects
+// the same way. Must fail with CONFIG_STRUCTURE (operational, exit 2).
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": null },
+    "designer": { "model": [] }
+  }
+}

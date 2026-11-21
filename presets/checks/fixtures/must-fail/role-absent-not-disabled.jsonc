@@ -1,0 +1,12 @@
+// Negative fixture (roster policy): deleting a role entry instead of
+// disabling the role opens the same inherited hole - designer is neither
+// pinned in root agents nor listed in disabled_agents. Must fail with
+// ROLE_INHERITS_UNEVIDENCED_MODEL.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

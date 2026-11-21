@@ -1,0 +1,14 @@
+// Negative fixture (rule 1): an array "model" is an ordered fallback chain
+// upstream; chains are rejected outright (MODEL_CHAIN_FORBIDDEN), and a paid
+// route hidden anywhere in the chain ALSO fails with UNEVIDENCED_MODEL. The
+// ids below are fixture data.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": {
+      "model": ["FILL_IN_VERIFIED_FREE_MODEL_ID", "openai/gpt-6"]
+    }
+  }
+}
