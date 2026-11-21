@@ -38,6 +38,14 @@
 
 # ------------------------------------------------------------------ setup ---
 
+# Annotated fixture tags need a committer identity too, not just commits.
+# Keep the suite independent of the developer's or CI runner's Git config.
+GIT_AUTHOR_NAME='cstack fixture'
+GIT_AUTHOR_EMAIL='fixture@example.invalid'
+GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
+GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
+export GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
+
 HERE=$(cd -P -- "$(dirname -- "$0")" 2>/dev/null && pwd -P)
 [ -n "$HERE" ] || { echo "cannot locate the test script directory"; exit 1; }
 INSTALLER="$HERE/cstack-install"
