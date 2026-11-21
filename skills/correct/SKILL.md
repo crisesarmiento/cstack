@@ -1,6 +1,6 @@
 ---
 name: correct
-description: Find recurring repository mistakes and prevent them structurally. Use only when the user asks, after a mistake class has occurred at least twice or the user corrects an agent for breaking an existing rule.
+description: Find recurring repository mistakes and prevent them structurally. Use when the user asks to fix a mistake that recurs (seen at least twice) or corrects an agent for breaking an existing rule.
 metadata:
   source: pstack 0.15.46
   author: Lauren Tan
@@ -35,8 +35,8 @@ Make mistakes impossible rather than asking contributors to remember more.
 5. For widespread legacy patterns, fail only on new occurrences. Put exceptions
    on the offending line with a reason, expiry date, and human approval.
 6. Update the existing rule table, pairing each rule with its enforcement.
-   If none exists, propose a short table in `docs/rules.md`, linked from
-   `AGENTS.md`, rather than growing that context file. Remove obsolete
+   If none exists, propose a location (e.g. `docs/rules.md` linked from `AGENTS.md`)
+   rather than growing that context file. Remove obsolete
    instructional rules once their mistakes cannot happen.
 7. Make one local commit per fixed class, including its failing/passing proof
    in the commit message. Stop there: do not open a PR, merge, push, or deploy.

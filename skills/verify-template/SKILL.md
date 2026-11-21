@@ -13,7 +13,8 @@ metadata:
 
 Run this generator from a cstack checkout or through `npx skills`, targeting
 the consumer repository. Do not copy or commit `verify-template` into that
-project. Commit only its generated `verify-<app>` and relative symlink.
+project. If npx skills installed it into the project, remove it after generation; never commit it.
+Commit only its generated `verify-<app>` and relative symlink.
 Honor the project's approval gates before writing or running anything.
 
 ## Discover and establish a baseline
@@ -115,8 +116,12 @@ shared baseline preconditions, isolation requirements, and proof standards.
 Require a real user path, action plus resulting state, and side-effect checks.
 Explain permitted boundary mocks and dry-run limitations.
 
-Create at least three feature files. Give each exactly these four H2s,
-replacing `<harness>` with the actual shell-callable driving mechanism:
+Create at least three feature files. Follow the shape of
+[feature-map example](references/feature-map-example/index.md) — its commands are illustrative, invented
+for a fictional app and never executed — and replace them with real commands,
+selectors, and paths discovered in the repository. Give each file exactly
+these four H2s, replacing `<harness>` with the actual shell-callable driving
+mechanism:
 
 - `Sub-features`: observable behaviors and expected outcomes.
 - `How to get to it (user POV)`: the user's route from the baseline.
