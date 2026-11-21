@@ -17,6 +17,11 @@ result for the changed behavior. Name checks you could not run and why.
 ## Shared guidance
 
 - Rule placement and enforcement: [rules/](rules/).
+- Cost, routing and Decisions: [rules/cost-and-models.md](rules/cost-and-models.md).
+- Shell permissions: [rules/agent-permissions.md](rules/agent-permissions.md).
+  Allow only exact commands without wildcards; variable arguments stay on ask.
+  Never pre-allow push, PR operations, merge, sudo or secret reads.
+  Verify prompts interactively; cstack does not enforce these permissions.
 - Design and implementation checklist: [principles/PRINCIPLES.md](principles/PRINCIPLES.md).
 - Project-specific verification skill: `.agents/skills/verify-<app>/SKILL.md`.
 

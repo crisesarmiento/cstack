@@ -6,6 +6,13 @@ All notable changes to cstack are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Agent-agnostic shell permission rules: exact-command allows without wildcards,
+  interactive verification, dated OpenCode evidence and explicit consumer
+  responsibilities; no automated permission enforcement yet
+  ([#10](https://github.com/crisesarmiento/cstack/issues/10)).
+
 ## [0.1.0] - 2026-11-21
 
 ### Added
