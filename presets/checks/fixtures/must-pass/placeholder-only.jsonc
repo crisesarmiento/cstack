@@ -1,0 +1,21 @@
+// Fixture: the shipped template shape (placeholders everywhere, fallback
+// off, council/observer/councillor disabled) must pass. Mirrors
+// presets/oh-my-opencode-slim.template.jsonc with the long comments removed.
+{
+  "fallback": { "enabled": false },
+  "disabled_hooks": ["foreground-fallback", "council-inject"],
+  "disabled_agents": ["observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": {
+      "model": "FILL_IN_VERIFIED_FREE_MODEL_ID",
+      "skills_add": ["correct", "sharpen"]
+    },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "oracle": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "designer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "fixer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "observer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "council": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "councillor": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

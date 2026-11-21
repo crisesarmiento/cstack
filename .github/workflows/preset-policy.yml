@@ -1,0 +1,49 @@
+# Encodes rules/cost-and-models.md for the preset artifacts this repo
+# ships. The checker (presets/checks/check_presets.py) is Python 3 standard
+# library only - no packages are installed on the runner.
+#
+# Two steps, both fail closed (a missing file, unreadable allowlist, or
+# parse error is exit 2 and fails the job; it never passes silently):
+#
+# 1. Scan the shipped templates under presets/: placeholders or evidenced
+#    free routes only (only openrouter/ or nvidia/ routes can ever be
+#    allowlisted), no Grok/xAI anywhere a model id can appear, fallback
+#    failover explicitly disabled, model arrays rejected outright, council
+#    required disabled (its seat models are inherited from user-level
+#    config), no skills replacement or "*" grants, no secret-looking
+#    values, complete built-in roster (pinned or disabled).
+# 2. Run the fixture suite under presets/checks/fixtures/: every rule has a
+#    negative fixture proving the check fails on that mistake (Grok on an
+#    automatic chain, unevidenced paid route or council seat, paid route
+#    inside a fallback chain, an all-free chain - arrays are rejected
+#    outright, unevidenced inherited role, enabled council, enabled but
+#    placeholder-only observer, inheritModelFrom, fallback left enabled,
+#    skills "*" and skills replacement, secret-looking value, invalid model
+#    types, broken or out-of-scope allowlist entry) and positive fixtures
+#    proving the intended adoption shapes pass.
+#
+# Consumer integration (NOT done by this workflow): projects run the same
+# script with --file against their live .opencode/oh-my-opencode-slim.jsonc
+# and their own evidenced allowlist - see presets/README.md. This job only
+# keeps cstack's own artifacts honest; it cannot see consumer repositories,
+# does not enforce anything at runtime, and no bot exists.
+
+name: Preset cost policy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  preset-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shipped preset templates (fail closed)
+        run: python3 presets/checks/check_presets.py --scan presets
+      - name: Run preset policy fixtures (negative and positive)
+        run: python3 presets/checks/check_presets.py --self-test presets/checks/fixtures

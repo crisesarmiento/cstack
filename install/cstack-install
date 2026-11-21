@@ -1,0 +1,547 @@
+#!/bin/sh
+# cstack-install — vendor a pinned cstack release into a consumer project.
+#
+# Implements option A of docs/specs/0001-structure-and-versioning.md section 6:
+# for a requested release tag it copies every skill of that tag (except
+# verify-template) into <project>/.agents/skills/, creates the relative
+# symlinks <project>/.claude/skills/<id> -> ../../.agents/skills/<id>, and
+# records the pin in <project>/.opencode/cstack.lock.json with the version,
+# the tag and the exact commit the tag resolves to.
+#
+# Guarantees:
+#   * POSIX sh. Needs git and the usual core utilities only (see
+#     install/README.md). No sudo, no package installs, no other languages.
+#   * Works from its own checkout: the cstack source is the repository that
+#     contains this script. If the requested tag exists in local refs it is
+#     used as is; the ONLY network operation is a `git fetch` of that single
+#     tag from the `origin` remote when it does not.
+#   * Content comes from the tag's git tree, never from the (possibly dirty)
+#     working copy. The lock records the commit the tag points at, so a dirty
+#     or ahead-of-tag checkout cannot leak into a consumer.
+#   * Idempotent: re-running with the same version changes nothing that
+#     already matches. Existing cstack targets that DIFFER from the tag are
+#     refused unless --force is given. --force only ever replaces the
+#     cstack-owned target paths listed in the plan; it never deletes anything
+#     outside them, and it never writes through a symbolic link.
+#   * Never touches: verify-template, consumer-generated verify-* skills,
+#     unrelated skills, the live preset .opencode/oh-my-opencode-slim.json,
+#     or any other existing file.
+#   * Every conflict is detected before the first mutation: a refused run
+#     leaves the project exactly as it was.
+#
+# Exit codes: 0 success (including a no-op run); 1 refused (conflict) or
+# runtime failure; 2 usage error (bad arguments, bad --version format,
+# missing/invalid --project).
+
+PROG=cstack-install
+
+# ---------------------------------------------------------------- helpers ---
+
+die() {
+    printf '%s: %s\n' "$PROG" "$*" >&2
+    exit 1
+}
+
+usage_error() {
+    printf '%s: %s\n' "$PROG" "$*" >&2
+    print_usage >&2
+    exit 2
+}
+
+print_usage() {
+    cat <<'EOF'
+usage: cstack-install --version vX.Y.Z --project <dir> [--force]
+
+Vendors the cstack skills of a tagged release into a consumer project
+(option A of docs/specs/0001 section 6).
+
+options:
+  --version vX.Y.Z   cstack release tag to install (required). Read from the
+                      local checkout this script lives in; if absent there,
+                      fetched (that single tag only) from the origin remote.
+  --project <dir>     existing project directory to install into (required).
+  --force             allow replacing existing cstack-owned targets that
+                      differ from the requested tag.
+  -h, --help          show this help and exit.
+
+writes into <project> (nothing else):
+  .agents/skills/<id>/        vendored copies of every skill of the tag
+                              except verify-template
+  .claude/skills/<id>         relative symlink -> ../../.agents/skills/<id>
+  .opencode/cstack.lock.json  { "version", "tag", "commit" }
+
+never touches:
+  verify-template, generated verify-* skills, unrelated skills, the live
+  preset .opencode/oh-my-opencode-slim.json, and every other existing file.
+
+exit codes: 0 ok (also when nothing needed changing); 1 refused or failed;
+2 usage error.
+
+examples:
+  cstack-install --version v0.1.0 --project ~/Projects/route
+  cstack-install --version v0.2.0 --project . --force
+EOF
+}
+
+# Accepts vMAJOR.MINOR.PATCH with numeric parts, plus an optional semver-ish
+# -prerelease and/or +build suffix made of [0-9A-Za-z.+-]. Max length 64.
+# Pure lexical scan: no external regex engine, no injection surface.
+valid_tag() {
+    vt_input=$1
+    [ "${#vt_input}" -le 64 ] || return 1
+    case $vt_input in
+        v*) vt_input=${vt_input#v} ;;
+        *) return 1 ;;
+    esac
+    vt_part=0
+    while [ "$vt_part" -lt 3 ]; do
+        vt_digits=''
+        while :; do
+            case $vt_input in '') break ;; esac
+            vt_first=${vt_input%%${vt_input#?}}
+            case $vt_first in
+                [0-9]) vt_digits=$vt_digits$vt_first vt_input=${vt_input#?} ;;
+                *) break ;;
+            esac
+        done
+        case $vt_digits in '') return 1 ;; esac
+        vt_part=$((vt_part + 1))
+        if [ "$vt_part" -lt 3 ]; then
+            case $vt_input in
+                .*) vt_input=${vt_input#.} ;;
+                *) return 1 ;;
+            esac
+        fi
+    done
+    case $vt_input in '') return 0 ;; esac
+    case $vt_input in
+        [-+]*) vt_input=${vt_input#?} ;;
+        *) return 1 ;;
+    esac
+    case $vt_input in
+        '') return 1 ;;
+        *[!0-9A-Za-z.+-]*) return 1 ;;
+    esac
+    return 0
+}
+
+# State of a planned target path. Each echoes exactly one of:
+#   absent | ok | conflict:<reason>
+# "ok" means the path already matches what the installer would write.
+
+agents_state() { # $1 = staged source dir, $2 = destination dir
+    as_dest=$2
+    if [ -L "$as_dest" ]; then
+        echo 'conflict:exists but is a symbolic link, expected a real directory'
+        return 0
+    fi
+    if [ -f "$as_dest" ]; then
+        echo 'conflict:exists but is a regular file, expected a directory'
+        return 0
+    fi
+    if [ -d "$as_dest" ]; then
+        # A vendored cstack skill never contains symlinks. Refuse before
+        # running diff -r, which would follow a link and read content
+        # outside the project.
+        as_links=$(find "$as_dest" -type l -print 2>/dev/null)
+        as_find_rc=$?
+        if [ "$as_find_rc" -ne 0 ]; then
+            echo "conflict:cannot inspect the existing copy (find exit $as_find_rc)"
+            return 0
+        fi
+        if [ -n "$as_links" ]; then
+            echo 'conflict:contains a symbolic link (a vendored cstack skill never does)'
+            return 0
+        fi
+        as_diff=0
+        diff -r "$1" "$as_dest" >/dev/null 2>&1 || as_diff=$?
+        if [ "$as_diff" -eq 0 ]; then
+            echo ok
+            return 0
+        fi
+        if [ "$as_diff" -eq 1 ]; then
+            echo "conflict:content differs from $TAG"
+            return 0
+        fi
+        echo "conflict:cannot compare with the tagged copy (diff exit $as_diff)"
+        return 0
+    fi
+    echo absent
+}
+
+link_state() { # $1 = symlink path, $2 = expected link target
+    ls_path=$1
+    if [ -L "$ls_path" ]; then
+        if [ "$HAS_READLINK" -ne 1 ]; then
+            echo 'conflict:exists but readlink is unavailable to inspect it'
+            return 0
+        fi
+        ls_target=$(readlink "$ls_path") || {
+            echo 'conflict:existing symbolic link could not be read'
+            return 0
+        }
+        if [ "$ls_target" = "$2" ]; then
+            echo ok
+            return 0
+        fi
+        echo "conflict:symbolic link points to '$ls_target', expected '$2'"
+        return 0
+    fi
+    if [ -e "$ls_path" ]; then
+        echo 'conflict:exists but is not a symbolic link'
+        return 0
+    fi
+    echo absent
+}
+
+lock_state() { # $1 = lock file path
+    lk_path=$1
+    if [ -L "$lk_path" ]; then
+        echo 'conflict:exists but is a symbolic link'
+        return 0
+    fi
+    if [ -d "$lk_path" ]; then
+        echo 'conflict:exists but is a directory'
+        return 0
+    fi
+    if [ -e "$lk_path" ]; then
+        echo file
+        return 0
+    fi
+    echo absent
+}
+
+# Intermediate layout components (.agents, .agents/skills, .claude, ...) must
+# be real directories or absent. cstack never writes through a symlinked or
+# foreign-typed directory level. --force does not override this.
+check_layout_component() {
+    cl_path=$1
+    if [ -L "$cl_path" ]; then
+        die "refusing to write through a symbolic link: $cl_path
+cstack only writes into real directories. Move or remove the link first."
+    fi
+    if [ -e "$cl_path" ] && [ ! -d "$cl_path" ]; then
+        die "refusing to continue: $cl_path exists but is not a directory"
+    fi
+}
+
+add_conflict() { # $1 = path, $2 = reason
+    CONFLICTS="$CONFLICTS  - $1 ($2)$NL"
+    CONFLICT_COUNT=$((CONFLICT_COUNT + 1))
+}
+
+# ------------------------------------------------------------ arguments -----
+
+TAG=''
+PROJECT=''
+FORCE=0
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        --version)
+            [ $# -ge 2 ] || usage_error "--version needs a value (vX.Y.Z)"
+            TAG=$2
+            shift 2
+            ;;
+        --project)
+            [ $# -ge 2 ] || usage_error "--project needs a directory path"
+            PROJECT=$2
+            shift 2
+            ;;
+        --force)
+            FORCE=1
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            usage_error "unknown argument: $1"
+            ;;
+    esac
+done
+
+[ -n "$TAG" ] || usage_error "--version is required"
+[ -n "$PROJECT" ] || usage_error "--project is required"
+valid_tag "$TAG" || usage_error "invalid --version value: '$TAG' (expected vX.Y.Z, e.g. v0.1.0)"
+VERSION=${TAG#v}
+
+# Validate the project path before any git work, so an invalid path never
+# triggers a tag fetch.
+PROJECT_DIR=$(cd -P -- "$PROJECT" 2>/dev/null && pwd -P)
+[ -n "$PROJECT_DIR" ] || usage_error "--project is not an existing directory: '$PROJECT'"
+
+# ------------------------------------------------- locate own checkout -----
+
+# Resolve the real location of this script (chase symlinks when readlink is
+# available), then take the cstack checkout as its parent directory.
+SELF=$0
+HAS_READLINK=0
+if command -v readlink >/dev/null 2>&1; then
+    HAS_READLINK=1
+    rs_hops=0
+    while [ -L "$SELF" ] && [ "$rs_hops" -lt 40 ]; do
+        rs_target=$(readlink "$SELF") || break
+        case $rs_target in
+            /*) SELF=$rs_target ;;
+            *) SELF=$(dirname -- "$SELF")/$rs_target ;;
+        esac
+        rs_hops=$((rs_hops + 1))
+    done
+fi
+
+SCRIPT_DIR=$(cd -P -- "$(dirname -- "$SELF")" 2>/dev/null && pwd -P)
+[ -n "$SCRIPT_DIR" ] || die "cannot locate the directory of this script (invoked as '$0')"
+SOURCE_ROOT=$(cd -P -- "$SCRIPT_DIR/.." && pwd -P)
+[ -n "$SOURCE_ROOT" ] || die "cannot locate the cstack checkout above '$SCRIPT_DIR'"
+
+git -C "$SOURCE_ROOT" rev-parse --git-dir >/dev/null 2>&1 || \
+    die "the directory above this script is not a git work tree: $SOURCE_ROOT"
+
+# ---------------------------------------------------- resolve the tag ------
+
+FETCHED=0
+if git -C "$SOURCE_ROOT" rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1; then
+    TAG_ORIGIN_NOTE='found locally, no network access'
+else
+    git -C "$SOURCE_ROOT" config --get remote.origin.url >/dev/null 2>&1 || \
+        die "tag $TAG is not in the local checkout and there is no 'origin' remote to fetch it from"
+    # The only network operation of this script: fetch exactly this one tag.
+    git -C "$SOURCE_ROOT" fetch --no-tags origin "refs/tags/$TAG:refs/tags/$TAG" || \
+        die "could not fetch tag $TAG from origin (see git's message above)"
+    git -C "$SOURCE_ROOT" rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 || \
+        die "origin does not have tag $TAG"
+    FETCHED=1
+    TAG_ORIGIN_NOTE='fetched from origin just now'
+fi
+
+COMMIT=$(git -C "$SOURCE_ROOT" rev-parse -q --verify "refs/tags/${TAG}^{commit}" 2>/dev/null)
+[ -n "$COMMIT" ] || die "cannot resolve tag $TAG to a commit"
+case $COMMIT in
+    ''|*[!0-9a-f]*) die "unexpected commit id from git for $TAG: $COMMIT" ;;
+esac
+[ "${#COMMIT}" -ge 40 ] || die "unexpected commit id from git for $TAG: $COMMIT"
+
+# ------------------------------------------ extract skills from the tag ----
+# The tree of the tag, never the working copy: a dirty checkout cannot leak
+# into a consumer. Uses a throwaway index so the source's own index is never
+# touched, and no tar/archive tool is needed.
+
+STAGE=''
+INDEX=''
+cleanup() {
+    [ -n "$STAGE" ] && rm -rf -- "$STAGE" 2>/dev/null
+    [ -n "$INDEX" ] && rm -f -- "$INDEX" 2>/dev/null
+    return 0
+}
+trap cleanup EXIT
+
+STAGE=$(mktemp -d) || die "cannot create a staging directory"
+chmod 755 "$STAGE" || die "cannot prepare the staging directory"
+INDEX=$(mktemp) || die "cannot create a staging index file"
+
+if ! GIT_INDEX_FILE="$INDEX" git -C "$SOURCE_ROOT" read-tree "$COMMIT:skills" >/dev/null 2>&1; then
+    die "tag $TAG does not contain a skills/ directory at the repository root"
+fi
+if ! GIT_INDEX_FILE="$INDEX" git -C "$SOURCE_ROOT" checkout-index -a --prefix="$STAGE/" >/dev/null 2>&1; then
+    die "failed to extract skills/ from tag $TAG"
+fi
+
+# ---------------------------------------------- enumerate installable ------
+# Skills are directories with a SKILL.md, named like the Agent Skills spec
+# wants (lowercase letters, digits, hyphens, at most 64 characters).
+# verify-template is never installed (spec 0002: it generates project-local
+# verify-<app> skills and is not loaded as a pack skill).
+
+NL='
+'
+SKILL_IDS=''
+EXCLUDED_IDS=''
+NONSKILL_IDS=''
+for en_path in "$STAGE"/* "$STAGE"/.*; do
+    en_base=${en_path##*/}
+    case $en_base in .|..) continue ;; esac
+    [ -e "$en_path" ] || continue
+    if [ -L "$en_path" ]; then
+        die "refusing: skills/$en_base in $TAG is a symbolic link"
+    fi
+    if [ ! -d "$en_path" ] || [ ! -f "$en_path/SKILL.md" ]; then
+        NONSKILL_IDS="$NONSKILL_IDS $en_base"
+        continue
+    fi
+    case $en_base in
+        verify-template)
+            EXCLUDED_IDS="$EXCLUDED_IDS $en_base"
+            continue
+            ;;
+    esac
+    case $en_base in
+        ''|-*|*[!a-z0-9-]*)
+            die "refusing: skills/$en_base in $TAG is not a valid skill id (lowercase letters, digits, hyphens; must not start with a hyphen)"
+            ;;
+    esac
+    [ "${#en_base}" -le 64 ] || \
+        die "refusing: skill id '$en_base' in $TAG is longer than 64 characters"
+    # Shipped cstack skills never contain symlinks; a tag that carries one
+    # inside a skill is treated as broken rather than trusted.
+    en_links=$(find "$en_path" -type l -print 2>/dev/null)
+    if [ -n "$en_links" ]; then
+        die "refusing: skills/$en_base in $TAG contains a symbolic link (shipped cstack skills never do)"
+    fi
+    SKILL_IDS="$SKILL_IDS $en_base"
+done
+
+[ -n "$SKILL_IDS" ] || \
+    die "tag $TAG has nothing to install: skills/ contains no installable skill (verify-template is always excluded; no lock file was written)"
+
+# ------------------------------------------------------------ preflight ----
+# Detect every conflict before touching anything.
+
+check_layout_component "$PROJECT_DIR/.agents"
+check_layout_component "$PROJECT_DIR/.agents/skills"
+check_layout_component "$PROJECT_DIR/.claude"
+check_layout_component "$PROJECT_DIR/.claude/skills"
+check_layout_component "$PROJECT_DIR/.opencode"
+
+CONFLICTS=''
+CONFLICT_COUNT=0
+for pf_id in $SKILL_IDS; do
+    pf_state=$(agents_state "$STAGE/$pf_id" "$PROJECT_DIR/.agents/skills/$pf_id")
+    case $pf_state in
+        conflict:*) add_conflict "$PROJECT_DIR/.agents/skills/$pf_id" "$pf_state" ;;
+    esac
+    pf_state=$(link_state "$PROJECT_DIR/.claude/skills/$pf_id" "../../.agents/skills/$pf_id")
+    case $pf_state in
+        conflict:*) add_conflict "$PROJECT_DIR/.claude/skills/$pf_id" "$pf_state" ;;
+    esac
+done
+pf_state=$(lock_state "$PROJECT_DIR/.opencode/cstack.lock.json")
+case $pf_state in
+    conflict:*) add_conflict "$PROJECT_DIR/.opencode/cstack.lock.json" "$pf_state" ;;
+esac
+
+if [ "$CONFLICT_COUNT" -gt 0 ] && [ "$FORCE" -ne 1 ]; then
+    {
+        printf '%s: refusing to install %s: %s target(s) already exist and do not match the tag:\n' \
+            "$PROG" "$TAG" "$CONFLICT_COUNT"
+        printf '%s' "$CONFLICTS"
+        printf 'Nothing was modified. Inspect these paths, or re-run with --force to replace them.\n'
+    } >&2
+    exit 1
+fi
+
+# ------------------------------------------------------------ execution ----
+
+mkdir -p -- "$PROJECT_DIR/.agents/skills" "$PROJECT_DIR/.claude/skills" "$PROJECT_DIR/.opencode" || \
+    die "failed to create the target layout under $PROJECT_DIR"
+
+COPIED_IDS=''
+LINKED_IDS=''
+REPLACED_PATHS=''
+UNCHANGED_COUNT=0
+CHANGED_COUNT=0
+
+for ex_id in $SKILL_IDS; do
+    ex_state=$(agents_state "$STAGE/$ex_id" "$PROJECT_DIR/.agents/skills/$ex_id")
+    case $ex_state in
+        ok)
+            UNCHANGED_COUNT=$((UNCHANGED_COUNT + 1))
+            ;;
+        absent)
+            cp -R -- "$STAGE/$ex_id" "$PROJECT_DIR/.agents/skills/$ex_id" || \
+                die "failed to copy skill '$ex_id' into .agents/skills/"
+            COPIED_IDS="$COPIED_IDS $ex_id"
+            CHANGED_COUNT=$((CHANGED_COUNT + 1))
+            ;;
+        conflict:*)
+            [ "$FORCE" -eq 1 ] || die "internal error: unexpected conflict for '$ex_id' during copy"
+            rm -rf -- "$PROJECT_DIR/.agents/skills/$ex_id" || \
+                die "failed to clear the conflicting path for '$ex_id'"
+            cp -R -- "$STAGE/$ex_id" "$PROJECT_DIR/.agents/skills/$ex_id" || \
+                die "failed to copy skill '$ex_id' into .agents/skills/"
+            REPLACED_PATHS="$REPLACED_PATHS .agents/skills/$ex_id"
+            CHANGED_COUNT=$((CHANGED_COUNT + 1))
+            ;;
+    esac
+
+    ex_state=$(link_state "$PROJECT_DIR/.claude/skills/$ex_id" "../../.agents/skills/$ex_id")
+    case $ex_state in
+        ok)
+            : ;;
+        absent)
+            ln -s "../../.agents/skills/$ex_id" "$PROJECT_DIR/.claude/skills/$ex_id" || \
+                die "failed to create .claude/skills/$ex_id"
+            LINKED_IDS="$LINKED_IDS $ex_id"
+            CHANGED_COUNT=$((CHANGED_COUNT + 1))
+            ;;
+        conflict:*)
+            [ "$FORCE" -eq 1 ] || die "internal error: unexpected conflict for '$ex_id' during link"
+            rm -rf -- "$PROJECT_DIR/.claude/skills/$ex_id" || \
+                die "failed to clear the conflicting path for '$ex_id'"
+            ln -s "../../.agents/skills/$ex_id" "$PROJECT_DIR/.claude/skills/$ex_id" || \
+                die "failed to create .claude/skills/$ex_id"
+            REPLACED_PATHS="$REPLACED_PATHS .claude/skills/$ex_id"
+            CHANGED_COUNT=$((CHANGED_COUNT + 1))
+            ;;
+    esac
+done
+
+# ---------------------------------------------------------------- lock ------
+
+LOCK_CONTENT=$(printf '{\n  "version": "%s",\n  "tag": "%s",\n  "commit": "%s"\n}\n' \
+    "$VERSION" "$TAG" "$COMMIT")
+LOCK_ACTION=written
+
+wl_path="$PROJECT_DIR/.opencode/cstack.lock.json"
+wl_state=$(lock_state "$wl_path")
+case $wl_state in
+    file)
+        wl_existing=$(cat -- "$wl_path" 2>/dev/null)
+        if [ "$wl_existing" = "$LOCK_CONTENT" ]; then
+            LOCK_ACTION=unchanged
+        fi
+        ;;
+    absent)
+        : ;;
+    conflict:*)
+        [ "$FORCE" -eq 1 ] || die "internal error: lock conflict without --force (preflight should have refused)"
+        rm -rf -- "$wl_path" || die "failed to clear the conflicting cstack.lock.json"
+        ;;
+esac
+
+if [ "$LOCK_ACTION" = written ]; then
+    wl_tmp=$(mktemp "$PROJECT_DIR/.opencode/.cstack.lock.XXXXXX") || \
+        die "cannot create a temporary lock file in $PROJECT_DIR/.opencode"
+    # %s\n: LOCK_CONTENT lost its trailing newline to command substitution;
+    # restore it so the lock is a well-formed POSIX text file.
+    if ! printf '%s\n' "$LOCK_CONTENT" > "$wl_tmp"; then
+        rm -f -- "$wl_tmp"
+        die "failed to write the lock content"
+    fi
+    if ! mv -f -- "$wl_tmp" "$wl_path"; then
+        rm -f -- "$wl_tmp"
+        die "failed to move the lock file into place"
+    fi
+fi
+
+# -------------------------------------------------------------- summary ----
+
+printf '%s: %s\n' "$PROG" "$PROJECT_DIR"
+printf '  version: %s (tag %s, %s)\n' "$VERSION" "$TAG" "$TAG_ORIGIN_NOTE"
+printf '  source checkout: %s\n' "$SOURCE_ROOT"
+printf '  pinned commit: %s\n' "$COMMIT"
+if [ "$CHANGED_COUNT" -eq 0 ] && [ "$LOCK_ACTION" = unchanged ]; then
+    printf '  nothing to do: project already matches %s\n' "$TAG"
+else
+    [ -z "$COPIED_IDS" ] || printf '  skills copied:%s\n' "$COPIED_IDS"
+    [ -z "$LINKED_IDS" ] || printf '  .claude links created:%s\n' "$LINKED_IDS"
+    [ -z "$REPLACED_PATHS" ] || printf '  replaced with --force:%s\n' "$REPLACED_PATHS"
+    [ "$UNCHANGED_COUNT" -eq 0 ] || printf '  already matching: %d skill(s)\n' "$UNCHANGED_COUNT"
+fi
+printf '  lock: .opencode/cstack.lock.json %s\n' "$LOCK_ACTION"
+[ -z "$EXCLUDED_IDS" ] || printf '  excluded (template, never installed):%s\n' "$EXCLUDED_IDS"
+[ -z "$NONSKILL_IDS" ] || printf '  ignored (not skill folders):%s\n' "$NONSKILL_IDS"
+printf '%s: done\n' "$PROG"
+
+exit 0

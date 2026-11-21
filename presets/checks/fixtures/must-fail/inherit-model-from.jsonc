@@ -1,0 +1,14 @@
+// Negative fixture (roster policy): inheritModelFrom makes the agent
+// follow the live session/orchestrator model, which is not evidenced in
+// this file. Scalar model, so only INHERIT_MODEL_FORBIDDEN fires.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": {
+      "model": "FILL_IN_VERIFIED_FREE_MODEL_ID",
+      "inheritModelFrom": "session"
+    }
+  }
+}

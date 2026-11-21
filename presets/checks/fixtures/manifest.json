@@ -1,0 +1,30 @@
+{
+  "must-pass/placeholder-only.jsonc": {},
+  "must-pass/roles-disabled.jsonc": {},
+  "must-pass/evidenced-allowlist-route.jsonc": { "allowlist": "allowlist-complete.json" },
+  "must-fail/grok-on-automatic-chain.jsonc": { "codes": ["DENIED_VENDOR_MODEL"] },
+  "must-fail/paid-route-without-evidence.jsonc": { "codes": ["UNEVIDENCED_MODEL"] },
+  "must-fail/paid-fallback-in-chain.jsonc": {
+    "codes": ["MODEL_CHAIN_FORBIDDEN", "UNEVIDENCED_MODEL"]
+  },
+  "must-fail/all-free-chain.jsonc": { "codes": ["MODEL_CHAIN_FORBIDDEN"] },
+  "must-fail/unevidenced-council-seat.jsonc": { "codes": ["UNEVIDENCED_MODEL"] },
+  "must-fail/no-explicit-model.jsonc": { "codes": ["ROLE_INHERITS_UNEVIDENCED_MODEL"] },
+  "must-fail/role-absent-not-disabled.jsonc": { "codes": ["ROLE_INHERITS_UNEVIDENCED_MODEL"] },
+  "must-fail/council-not-disabled.jsonc": { "codes": ["COUNCIL_NOT_DISABLED"] },
+  "must-fail/observer-unverified.jsonc": { "codes": ["OBSERVER_UNVERIFIED"] },
+  "must-fail/inherit-model-from.jsonc": { "codes": ["INHERIT_MODEL_FORBIDDEN"] },
+  "must-fail/fallback-enabled.jsonc": { "codes": ["FALLBACK_NOT_DISABLED"] },
+  "must-fail/skills-star.jsonc": { "codes": ["SKILLS_STAR_FORBIDDEN"] },
+  "must-fail/skills-replacement.jsonc": { "codes": ["SKILLS_REPLACEMENT_FORBIDDEN"] },
+  "must-fail/plausible-secret.jsonc": { "codes": ["SECRET_LIKE_VALUE"] },
+  "must-fail/invalid-model-type.jsonc": {
+    "codes": ["CONFIG_STRUCTURE"],
+    "operational": true
+  },
+  "must-fail/broken-allowlist-entry.jsonc": {
+    "allowlist": "allowlist-incomplete.json",
+    "codes": ["ALLOWLIST_INVALID"],
+    "operational": true
+  }
+}

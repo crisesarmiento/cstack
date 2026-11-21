@@ -1,0 +1,12 @@
+// Negative fixture (observer policy): observer is enabled (not in
+// disabled_agents) but only pinned with a placeholder - not filled with a
+// verified route. Must fail with OBSERVER_UNVERIFIED and nothing else.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "observer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

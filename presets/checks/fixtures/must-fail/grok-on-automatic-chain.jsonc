@@ -1,0 +1,11 @@
+// Negative fixture (rule 3): a Grok/xAI route on an automatic chain must
+// fail with DENIED_VENDOR_MODEL. The id below is fixture data proving the
+// deny-list; it is never a usable preset.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "xai/grok-4" }
+  }
+}

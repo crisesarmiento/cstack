@@ -1,0 +1,13 @@
+// Fixture: a project may disable the roles it does not want instead of
+// pinning them, as long as every built-in role is either pinned or disabled.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": {
+      "model": "FILL_IN_VERIFIED_FREE_MODEL_ID",
+      "skills_add": ["correct", "sharpen"]
+    },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

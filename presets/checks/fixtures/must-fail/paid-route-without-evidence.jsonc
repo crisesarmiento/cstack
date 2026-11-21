@@ -1,0 +1,11 @@
+// Negative fixture (rule 1): a real paid-looking route with no allowlist
+// evidence must fail with UNEVIDENCED_MODEL. Naming is not evidence; the
+// shipped allowlist is empty. The id below is fixture data.
+{
+  "fallback": { "enabled": false },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "anthropic/claude-sonnet-4-6" }
+  }
+}

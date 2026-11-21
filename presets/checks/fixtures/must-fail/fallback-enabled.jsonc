@@ -1,0 +1,11 @@
+// Negative fixture (rule 1): upstream enables foreground model-chain
+// failover by default; a preset that leaves it on can walk into an
+// inherited paid route. Must fail with FALLBACK_NOT_DISABLED.
+{
+  "fallback": { "enabled": true },
+  "disabled_agents": ["oracle", "designer", "fixer", "observer", "council", "councillor"],
+  "agents": {
+    "orchestrator": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" },
+    "explorer": { "model": "FILL_IN_VERIFIED_FREE_MODEL_ID" }
+  }
+}

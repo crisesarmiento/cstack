@@ -1,0 +1,32 @@
+// Verified-free route allowlist for the cstack preset cost policy.
+//
+// This file is the EVIDENCE RECORD for rules/cost-and-models.md rule 2: an
+// API key or a catalog listing is never permission to spend. A model route
+// may run in an automatic chain only when it is listed here WITH evidence
+// recorded at verification time. The checker (check_presets.py) fails closed:
+// any model id that is neither a FILL_IN_* placeholder nor admitted here
+// fails the run.
+//
+// Entry schema (every field required, no exceptions):
+//   {
+//     "id": "provider/model",          // exact model id used in the preset
+//     "evidence": {
+//       "source": "https://...",       // page where $0 pricing was verified
+//       "checked": "YYYY-MM-DD",        // date of that verification
+//       "quote": "..."                  // text quoted from the page proving
+//                                      // the route is free
+//     }
+//   }
+//
+// NAMING IS NOT EVIDENCE. OpenRouter marks some routes with a ':free'
+// suffix and NVIDIA has no universal free naming convention, so no slug
+// pattern is ever inferred as free. Verify the pricing page itself, quote it,
+// and date it. Grok/xAI entries are rejected outright (rule 3).
+//
+// Adding or changing an entry is a reviewed PR: cite the pricing page in the
+// evidence and re-verify entries when providers change their catalogs. This
+// copy ships EMPTY because no route has been verified yet; consumer
+// projects keep their own copy (presets/README.md).
+{
+  "routes": []
+}
