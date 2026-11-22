@@ -8,7 +8,7 @@ travels with the checkout (Orca worktrees, clones, CI) with no runtime
 dependency on this repository.
 
 ```text
-cstack-install --version v0.1.0 --project /path/to/repo
+cstack-install --version v0.1.1 --project /path/to/repo
 ```
 
 Run it **from a checkout of cstack** (the script uses the repository it lives
