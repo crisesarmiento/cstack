@@ -16,6 +16,9 @@ All notable changes to cstack are documented here. The format follows
   specialists change code and report back, with Londinium pilot evidence and
   no automated enforcement
   ([#12](https://github.com/crisesarmiento/cstack/issues/12)).
+- Context template line: open pull requests ready for review, never as drafts,
+  because reviews run once when the PR opens
+  ([#14](https://github.com/crisesarmiento/cstack/issues/14)).
 
 ## [0.1.0] - 2026-11-21
 
