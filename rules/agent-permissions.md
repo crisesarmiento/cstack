@@ -30,6 +30,32 @@ An unprompted command in a headless run is not evidence that an allow rule
 works. Re-verify after changing the agent version, permission configuration
 or execution mode.
 
+### 3. Only the orchestrator runs verification
+
+Only the top-level agent (the orchestrator) runs tests, builds and verify
+scripts. Delegated specialists change code and report back. A specialist runs
+a check only if the orchestrator hands it one exact allowed command.
+
+**Why.** Allow lists are written for the orchestrator's commands. A specialist
+that runs its own checks either hits permission prompts or runs commands nobody
+vetted. Duplicate runs, one by the specialist and one by the orchestrator,
+also waste time.
+
+**Evidence.** Londinium pilot, issue
+[Palehour/londinium#385](https://github.com/Palehour/londinium/issues/385)
+task T1, 2026-11-21: the `correct` skill found both delegated specialists
+running verification commands outside the allowed list, which only covered the
+orchestrator's commands (`tools/run_tests.sh` and
+`tools/verificar.sh --escenario small_rich`). See
+[issue #12](https://github.com/crisesarmiento/cstack/issues/12).
+
+**What cstack enforces.** Nothing automated. This is rule text only; no preset,
+check or runtime guard stops a specialist from running a command.
+
+**What the adopter must do.** State the rule in the project's `AGENTS.md` and
+in the orchestrator's prompt, so delegation instructions tell specialists not
+to run checks and pass an exact allowed command when one is needed.
+
 ## Evidence and limits
 
 On **2026-11-21**, in a real interactive Orca TUI session on Omarchy,
