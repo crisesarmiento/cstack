@@ -13,13 +13,13 @@ After the release tag is published, run the installer from a cstack Git checkout
 (Git and a POSIX shell are required):
 
 ```sh
-./install/cstack-install --version v0.1.0 --project /path/to/project
+./install/cstack-install --version v0.1.1 --project /path/to/project
 ```
 
 If `install/` is on your `PATH`, the equivalent command is:
 
 ```sh
-cstack-install --version v0.1.0 --project /path/to/project
+cstack-install --version v0.1.1 --project /path/to/project
 ```
 
 It copies `correct` and `sharpen` from the requested tag to `.agents/skills/`,
@@ -32,7 +32,7 @@ Re-run with a new tag to upgrade; differing skill directories require an explici
 The public compatible alternative is:
 
 ```sh
-npx skills add crisesarmiento/cstack@v0.1.0
+npx skills add crisesarmiento/cstack@v0.1.1
 ```
 
 To install only the shared skills, add `-s correct -s sharpen`. This alternative

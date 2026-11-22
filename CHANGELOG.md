@@ -6,6 +6,8 @@ All notable changes to cstack are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-22
+
 ### Added
 
 - Agent-agnostic shell permission rules: exact-command allows without wildcards,
@@ -19,6 +21,11 @@ All notable changes to cstack are documented here. The format follows
 - Context template line: open pull requests ready for review, never as drafts,
   because reviews run once when the PR opens
   ([#14](https://github.com/crisesarmiento/cstack/issues/14)).
+
+### Changed
+
+- Promoted `VERSION`, `cstack.json` and the install examples to `0.1.1`
+  ([#16](https://github.com/crisesarmiento/cstack/issues/16)).
 
 ## [0.1.0] - 2026-11-21
 
@@ -60,6 +67,7 @@ presets and the installer are still missing.
   ([#5](https://github.com/crisesarmiento/cstack/pull/5)).
 - Specs 0001 (structure and versioning) and 0002 (first skills).
 
-[Unreleased]: https://github.com/crisesarmiento/cstack/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/crisesarmiento/cstack/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/crisesarmiento/cstack/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/crisesarmiento/cstack/compare/v0.1.0-pilot.1...v0.1.0
 [0.1.0-pilot.1]: https://github.com/crisesarmiento/cstack/releases/tag/v0.1.0-pilot.1
