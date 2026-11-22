@@ -78,7 +78,7 @@ exit codes: 0 ok (also when nothing needed changing); 1 refused or failed;
 2 usage error.
 
 examples:
-  cstack-install --version v0.1.0 --project ~/Projects/route
+  cstack-install --version v0.1.1 --project ~/Projects/route
   cstack-install --version v0.2.0 --project . --force
 EOF
 }
