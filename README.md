@@ -56,6 +56,8 @@ The installer does not copy the generator, presets or context files.
 4. For OpenCode with slim 3.0.7, manually merge the
    [preset template](presets/) into the project's live preset. Fill model IDs
    only after checking the [cost policy and enforcement](rules/cost-and-models.md).
+   Review the [agent permission rules](rules/agent-permissions.md) for every
+   agent: exact-command shell allows only, with interactive verification.
    Do not overwrite an existing preset or inherit unreviewed fallback routes.
 5. Generate a project verification skill when needed; review evidence before
    the diff. No global configuration or per-machine cstack symlinks are needed.
@@ -65,6 +67,8 @@ The installer does not copy the generator, presets or context files.
 - [Skills](skills/): `correct`, `sharpen`, and `verify-template`.
 - [Eight principles](principles/PRINCIPLES.md): one implementation checklist.
 - [Rules](rules/cost-and-models.md): cost, routing and Decision enforcement.
+  [Agent permissions](rules/agent-permissions.md): exact-command shell allows
+  and consumer-owned interactive verification; no automated enforcement yet.
 - [Versioning and layout spec](docs/specs/0001-structure-and-versioning.md),
   [skill contracts](docs/specs/0002-first-skills.md), and [changelog](CHANGELOG.md).
 
