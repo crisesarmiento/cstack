@@ -12,6 +12,10 @@ All notable changes to cstack are documented here. The format follows
   interactive verification, dated OpenCode evidence and explicit consumer
   responsibilities; no automated permission enforcement yet
   ([#10](https://github.com/crisesarmiento/cstack/issues/10)).
+- Agent-agnostic rule that only the orchestrator runs verification; delegated
+  specialists change code and report back, with Londinium pilot evidence and
+  no automated enforcement
+  ([#12](https://github.com/crisesarmiento/cstack/issues/12)).
 
 ## [0.1.0] - 2026-11-21
 

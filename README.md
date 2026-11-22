@@ -68,7 +68,8 @@ The installer does not copy the generator, presets or context files.
 - [Eight principles](principles/PRINCIPLES.md): one implementation checklist.
 - [Rules](rules/cost-and-models.md): cost, routing and Decision enforcement.
   [Agent permissions](rules/agent-permissions.md): exact-command shell allows
-  and consumer-owned interactive verification; no automated enforcement yet.
+  and consumer-owned interactive verification; only the orchestrator runs
+  verification; no automated enforcement yet.
 - [Versioning and layout spec](docs/specs/0001-structure-and-versioning.md),
   [skill contracts](docs/specs/0002-first-skills.md), and [changelog](CHANGELOG.md).
 
