@@ -71,13 +71,17 @@ The installer does not copy the generator, presets or context files.
   and consumer-owned interactive verification; only the orchestrator runs
   verification; no automated enforcement yet.
 - [Versioning and layout spec](docs/specs/0001-structure-and-versioning.md),
-  [skill contracts](docs/specs/0002-first-skills.md), and [changelog](CHANGELOG.md).
+  [skill contracts](docs/specs/0002-first-skills.md),
+  [pilot results for v0.1.0-pilot.1 in Londinium](docs/pilots/v0.1.0-pilot.1-londinium.md),
+  and [changelog](CHANGELOG.md).
 
 Scope and approved decisions: [issue #1](https://github.com/crisesarmiento/cstack/issues/1).
-[Pilot results in Londinium (#8)](https://github.com/crisesarmiento/cstack/issues/8)
-confirm loading in OpenCode, Claude Code and Codex. Cursor and pi loading,
-`correct` on a qualifying recurring mistake, and a second-agent
-`verify-template` run remain unverified; this release does not claim otherwise.
+[Pilot results in Londinium](docs/pilots/v0.1.0-pilot.1-londinium.md)
+([#8](https://github.com/crisesarmiento/cstack/issues/8))
+confirm loading in OpenCode, Claude Code and Codex, and record later
+`correct` evidence (including a fail-then-pass check in Londinium #398).
+Cursor and pi loading, and a second-agent `verify-template` run, remain
+unverified; this release does not claim otherwise.
 
 Versions live in `VERSION` and `cstack.json`; tags use `vMAJOR.MINOR.PATCH`.
 Breaking changes during `0.x` bump MINOR. A release requires a changelog entry

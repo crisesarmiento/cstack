@@ -6,6 +6,12 @@ All notable changes to cstack are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Writeup of the v0.1.0-pilot.1 results in Londinium (D-199), including later
+  runs and the remaining validation gaps
+  ([#8](https://github.com/crisesarmiento/cstack/issues/8)).
+
 ## [0.1.1] - 2026-11-22
 
 ### Added
