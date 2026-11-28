@@ -12,6 +12,11 @@ All notable changes to cstack are documented here. The format follows
   runs and the remaining validation gaps
   ([#8](https://github.com/crisesarmiento/cstack/issues/8)).
 
+- Third-party skill install rule: official repository only, pin to a tag
+  or commit SHA, read `SKILL.md` and bundled scripts before installing,
+  agents propose and a human approves, and record the source and pin
+  ([#22](https://github.com/crisesarmiento/cstack/issues/22)).
+
 ## [0.1.1] - 2026-11-22
 
 ### Added
