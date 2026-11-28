@@ -41,6 +41,16 @@ Make mistakes impossible rather than asking contributors to remember more.
 7. Make one local commit per fixed class, including its failing/passing proof
    in the commit message. Stop there: do not open a PR, merge, push, or deploy.
 
+If a separate task authorizes integration: merge, never rebase a branch that
+has already been pushed.
+
+PR evidence checklist (when a PR is authorized):
+- Exact command, exit code, and result.
+- Cited decision or issue; screenshots for UI changes.
+- Verified head SHA: `git rev-parse HEAD` equals the remote branch head.
+- Validate every new data key or configuration value (Londinium #359:
+  a new key went unvalidated).
+
 Reply with each class, its evidence links or commit references, chosen level,
 why each higher level could not work, enforcement and proof, and local commit
 or blocker. Include the updated rule/enforcement table.
