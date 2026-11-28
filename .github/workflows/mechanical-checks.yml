@@ -1,0 +1,21 @@
+name: Mechanical checks
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  mechanical-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: check-no-personal-paths
+        run: python3 -B checks/test-mechanical-checks.py paths
+      - name: check-skills-lock
+        run: python3 -B checks/test-mechanical-checks.py skills
