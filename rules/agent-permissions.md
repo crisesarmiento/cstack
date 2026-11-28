@@ -68,9 +68,9 @@ For any third-party skill:
 - Install only from the skill's official repository.
 - Pin to a tag or a commit SHA; never install from a moving branch.
 - Read `SKILL.md` and every bundled script before installing.
-- Agents never install, update or fetch skills on their own. They may
-  only propose a source and a pin; a human must approve before anything
-  is installed or updated.
+- Agents never install or update skills on their own. They may read a
+  skill's source to propose it, with a source and a pin; a human must
+  approve before anything is installed or updated.
 - Record the official repository URL and the pin (tag and/or SHA) in the
   project, so the install can be reproduced and reviewed.
 

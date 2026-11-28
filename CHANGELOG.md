@@ -11,7 +11,6 @@ All notable changes to cstack are documented here. The format follows
 - Writeup of the v0.1.0-pilot.1 results in Londinium (D-199), including later
   runs and the remaining validation gaps
   ([#8](https://github.com/crisesarmiento/cstack/issues/8)).
-
 - Third-party skill install rule: official repository only, pin to a tag
   or commit SHA, read `SKILL.md` and bundled scripts before installing,
   agents propose and a human approves, and record the source and pin

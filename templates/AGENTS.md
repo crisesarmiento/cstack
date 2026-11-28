@@ -24,7 +24,12 @@ result for the changed behavior. Name checks you could not run and why.
   Verify prompts interactively; cstack does not enforce these permissions.
 - Only the orchestrator runs tests, builds and verify scripts; delegated agents
   change code and report back. See [rules/agent-permissions.md](rules/agent-permissions.md#3-only-the-orchestrator-runs-verification).
-- Third-party skills: install only from the skill's official repository, pinned to a tag or commit SHA (never a moving branch). Read `SKILL.md` and every bundled script before installing. Agents never install, update or fetch skills on their own; they only propose a source and pin for human approval. Record the source and pin. See [rules/agent-permissions.md](rules/agent-permissions.md#4-third-party-skills).
+- Third-party skills: install only from the skill's official repository,
+  pinned to a tag or commit SHA (never a moving branch). Read `SKILL.md` and
+  every bundled script before installing. Agents may read a skill's source to
+  propose it, but never install or update skills on their own; a human
+  approves the source and pin. Record the source and pin. See
+  [rules/agent-permissions.md](rules/agent-permissions.md#4-third-party-skills).
 - Open pull requests ready for review, never as drafts (e.g. no
   `gh pr create --draft`); reviews run once, when the PR opens.
 - Design and implementation checklist: [principles/PRINCIPLES.md](principles/PRINCIPLES.md).
