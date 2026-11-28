@@ -29,13 +29,23 @@ def sensitive(path):
         "credentials", "credential", "token", "tokens", "access_token",
         "api_key", "apikey", "key", "keys", "private_key", "secrets", "secret",
     }
+    # Match bare credential names and common credential storage formats, not
+    # every file sharing the stem (e.g. key.py, token.test.js, secret.md).
+    private_extensions = {
+        "bak", "backup", "cfg", "conf", "ini", "json", "local", "old",
+        "properties", "toml", "txt", "xml", "yaml", "yml",
+    }
     for part in PurePosixPath(path).parts:
         name = part.lower()
-        stem = name.lstrip(".").split(".", 1)[0].replace("-", "_")
+        stem, _, suffix = name.lstrip(".").partition(".")
+        extension = suffix.partition(".")[0]
         if (
             name in private_names
             or name.startswith((".env", "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519"))
-            or stem in private_stems
+            or (
+                stem.replace("-", "_") in private_stems
+                and (not suffix or extension in private_extensions)
+            )
             or name.endswith((".pem", ".key", ".p12", ".pfx", ".kdbx"))
         ):
             return True

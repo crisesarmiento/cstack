@@ -8,9 +8,21 @@ All notable changes to cstack are documented here. The format follows
 
 ### Added
 
+- Mechanical CI checks for personal paths in tracked files and pinned consumer
+  skill locks, contents, modes and relative symlinks, with offline regression
+  fixtures and documented local commands
+  ([#21](https://github.com/crisesarmiento/cstack/issues/21)).
 - Writeup of the v0.1.0-pilot.1 results in Londinium (D-199), including later
   runs and the remaining validation gaps
   ([#8](https://github.com/crisesarmiento/cstack/issues/8)).
+
+### Changed
+
+- `correct` now requires merging rather than rebasing an already-pushed branch
+  when integration is authorized, plus a PR evidence checklist covering commands,
+  exit codes, results, linked issues, UI screenshots when applicable, matching
+  local/remote head SHAs, and validation of new data/configuration keys
+  ([#21](https://github.com/crisesarmiento/cstack/issues/21)).
 
 ## [0.1.1] - 2026-11-22
 

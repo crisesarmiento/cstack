@@ -46,9 +46,20 @@ def test_paths(tmp):
     (project / "not-tracked.txt").write_bytes(linux)
     (project / "linux.txt").write_bytes(b"ordinary line\n")
     (project / "mac.txt").write_bytes(b"ordinary line\n")
-    git(project, "add", "--", "linux.txt", "mac.txt")
+    benign_names = ("key.py", "token.test.js", "secret.md")
+    for name in benign_names:
+        (project / name).write_bytes(b"ordinary line\n")
+    git(project, "add", "--", "linux.txt", "mac.txt", *benign_names)
     args = ("--repo", str(project))
     run_check("check-no-personal-paths", *args)
+
+    for name in benign_names:
+        (project / name).write_bytes(linux + b"\n")
+        run_check(
+            "check-no-personal-paths", *args, expected=1,
+            diagnostic=f"'{name}':1: absolute home path", hidden=(linux,),
+        )
+        (project / name).write_bytes(b"ordinary line\n")
 
     (project / "linux.txt").write_bytes(b"ordinary line\n" + linux + b"\n")
     run_check(
@@ -65,6 +76,23 @@ def test_paths(tmp):
     run_check(
         "check-no-personal-paths", *args, expected=1,
         diagnostic="'mac.txt':1: absolute home path", hidden=(unicode_home,),
+    )
+    (project / "mac.txt").write_bytes(b"ordinary line\n")
+
+    for name in (
+        "nested/.env.local", "nested/auth.json", "nested/service.json",
+        "nested/.ssh/config", "nested/client.pem", "nested/secrets/config",
+        "nested/api-key.json.bak",
+    ):
+        require(sensitive(name), f"expected sensitive path classification for fixture: {name}")
+
+    credential = "token.json"
+    (project / credential).write_bytes(linux + b"\n")
+    git(project, "add", "--", credential)
+    run_check(
+        "check-no-personal-paths", *args, expected=1,
+        diagnostic="sensitive tracked path (not read)",
+        hidden=(credential.encode(), linux, b"absolute home path"),
     )
     run_check("check-no-personal-paths", "--repo", str(ROOT), diagnostic="check-no-personal-paths: OK")
 
